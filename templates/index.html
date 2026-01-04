@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VisionAI | Action Recognition</title>
+    <!-- Google Fonts & FontAwesome for icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #4f46e5;
+            --bg: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: radial-gradient(circle at top left, #1e1b4b, #0f172a);
+            color: #f8fafc;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .dashboard {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            max-width: 700px;
+            width: 90%;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            margin-bottom: 30px;
+        }
+
+        .upload-section {
+            border: 2px dashed #475569;
+            padding: 30px;
+            border-radius: 16px;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+
+        .upload-section:hover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .btn-analyze {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 21px 32px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+
+        .btn-analyze:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.4);
+        }
+
+        .result-container {
+            margin-top: 40px;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .prediction-box {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid #10b981;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .prediction-text {
+            font-size: 1.3rem;
+            color: #34d399;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        img {
+            max-width: 100%;
+            border-radius: 16px;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3);
+            border: 4px solid rgba(255, 255, 255, 0.05);
+        }
+
+        #loading {
+            display: none;
+            margin: 20px auto;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255,255,255,0.1);
+            border-left-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard">
+        <i class="fa-solid fa-brain" style="font-size: 3rem; color: #818cf8; margin-bottom: 20px;"></i>
+        <h1>VisionAI</h1>
+        <p class="subtitle">Deep Learning System for Action Recognition</p>
+
+        <form method="POST" enctype="multipart/form-data" id="uploadForm">
+            <div class="upload-section" onclick="document.getElementById('fileInput').click()">
+                <i class="fa-solid fa-cloud-arrow-up" style="font-size: 2rem; color: #94a3b8; margin-bottom: 10px;"></i>
+                <p id="fileName">Click to upload or drag & drop</p>
+                <input type="file" id="fileInput" name="image" accept="image/*" style="display:none" onchange="updateFileName(this)">
+            </div>
+            
+            <button type="submit" class="btn-analyze" onclick="showLoading()">
+                <i class="fa-solid fa-magnifying-glass"></i> Analyze Image
+            </button>
+        </form>
+
+        <div id="loading">
+            <div class="spinner"></div>
+            <p>AI is analyzing the action...</p>
+        </div>
+
+        {% if prediction %}
+        <div class="result-container">
+            <div class="prediction-box">
+                <small style="color: #94a3b8; display: block; margin-bottom: 5px;">AI DECISION</small>
+                <div class="prediction-text">"{{ prediction }}"</div>
+            </div>
+            {% if image_path %}
+                <img src="{{ image_path }}" alt="Analysis Target">
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function updateFileName(input) {
+            const name = input.files[0] ? input.files[0].name : "Click to upload or drag & drop";
+            document.getElementById('fileName').innerText = name;
+        }
+
+        function showLoading() {
+            if(document.getElementById('fileInput').value) {
+                document.getElementById('loading').style.display = 'block';
+                document.querySelector('.result-container').style.opacity = '0.3';
+            }
+        }
+    </script>
+</body>
+</html>
